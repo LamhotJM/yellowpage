@@ -52,9 +52,9 @@ USER_AGENT = 'yellowpage (+http://www.yellowpages.sg'
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
+DOWNLOADER_MIDDLEWARES = {
 #    'yellowpage.middlewares.MyCustomDownloaderMiddleware': 543,
-#}
+}
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
