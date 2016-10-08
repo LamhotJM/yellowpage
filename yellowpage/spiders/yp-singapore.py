@@ -4,13 +4,16 @@ from scrapy.item import Field, Item
 from scrapy.http import Request
 
 
+
 class YellowpagesItem(Item):
     companyName = Field()
     companyAddress = Field()
     companyPhone = Field()
     totalResult = Field()
 
-class QuotesSpider(scrapy.Spider):
+
+class YellowPagesSpider(scrapy.Spider):
+    handle_httpstatus_list = [302]
     name = "yellowpagesg"
     allowed_domains = ["yellowpages.sg"]
     start_urls = [

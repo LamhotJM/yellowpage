@@ -16,12 +16,11 @@ NEWSPIDER_MODULE = 'yellowpage.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/535.24"
+USER_AGENT = "uses Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/535.24"
 # Obey robots.txt rules
 
-
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
@@ -32,7 +31,7 @@ USER_AGENT = "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/535.24 (KHTML, like 
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -52,9 +51,30 @@ USER_AGENT = "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/535.24 (KHTML, like 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-#    'yellowpage.middlewares.MyCustomDownloaderMiddleware': 543,
-}
+    'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 100,
+    'scrapy.downloadermiddlewares.httpauth.HttpAuthMiddleware': 300,
+    'scrapy.downloadermiddlewares.downloadtimeout.DownloadTimeoutMiddleware': 350,
+    'scrapy.downloadermiddlewares.defaultheaders.DefaultHeadersMiddleware': 400,
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': 500,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': 550,
+    'scrapy.downloadermiddlewares.ajaxcrawl.AjaxCrawlMiddleware': 560,
+    'scrapy.downloadermiddlewares.redirect.MetaRefreshMiddleware': 580,
+    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 590,
+    'scrapy.downloadermiddlewares.redirect.RedirectMiddleware': 600,
+    'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 700,
+    'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 750,
+    'scrapy.downloadermiddlewares.chunked.ChunkedTransferMiddleware': 830,
+    'scrapy.downloadermiddlewares.stats.DownloaderStats': 850,
+    'scrapy.downloadermiddlewares.httpcache.HttpCacheMiddleware': 900,
 
+}
+# CRAWLERA_ENABLED = True
+# CRAWLERA_APIKEY = '5584d6bd188a4a0fa595f8d66576ac2b'
+# CONCURRENT_REQUESTS = 32
+# CONCURRENT_REQUESTS_PER_DOMAIN = 32
+# AUTOTHROTTLE_ENABLED = False
+# DOWNLOAD_TIMEOUT = 300
+# CRAWLERA_PRESERVE_DELAY=4
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
 #EXTENSIONS = {
@@ -73,7 +93,7 @@ DOWNLOADER_MIDDLEWARES = {
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
-#AUTOTHROTTLE_MAX_DELAY = 60
+AUTOTHROTTLE_MAX_DELAY = 60
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
