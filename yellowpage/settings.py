@@ -16,8 +16,7 @@ NEWSPIDER_MODULE = 'yellowpage.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'yellowpage (+http://www.yellowpages.sg'
-
+USER_AGENT = "Mozilla/5.0 (X11; Windows x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/535.24"
 # Obey robots.txt rules
 
 
