@@ -14,7 +14,7 @@
 initialize baseUrl <- yellowpage url 
 foreach baseUrl as categories  
        foreach categories as subCategories 
-             foreach categories as linkSubCategories 
+             foreach subCategories as linkSubCategories 
                   linkSubCategories as paginationPage  
 ``` 
              

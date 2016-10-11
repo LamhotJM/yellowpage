@@ -2067,7 +2067,7 @@ class YellowPagesSpider(scrapy.Spider):
 
         if strTemp == None:
             crawlUrl = response.url + "?per=20&page=1&ajax=1&sort=all"
-            yield Request(url=crawlUrl, callback=self.parse_test, dont_filter=True)
+            yield Request(url=crawlUrl, callback=self.parse_pagination, dont_filter=True)
         else:
             totals = [int(s) for s in strTemp.split() if s.isdigit()]
             totalResult = str(totals).strip('[]')
@@ -2076,7 +2076,7 @@ class YellowPagesSpider(scrapy.Spider):
             for i in range(1, totalPage):
                 crawlUrl = response.url + "?per=20&page=" + str(
                     i) + "&ajax=1&sort=all"
-                yield Request(url=crawlUrl, callback=self.parse_test, dont_filter=True)
+                yield Request(url=crawlUrl, callback=self.parse_pagination, dont_filter=True)
 
     def handle_spider_closed(spider, reason):
         spider.crawler.stats.set_value('failed_urls', ','.join(spider.failed_urls))
@@ -2092,7 +2092,7 @@ class YellowPagesSpider(scrapy.Spider):
 
     dispatcher.connect(handle_spider_closed, signals.spider_closed)
 
-    def parse_test(self, response):
+    def parse_pagination(self, response):
         url = Selector(response)
         EVENT_LINK_XPATH = '//div[@class="company_items"]'
         events = url.xpath(EVENT_LINK_XPATH)
@@ -2114,7 +2114,6 @@ class YellowPagesSpider(scrapy.Spider):
                     f.write('{0},{1},{2}\n'.format(item['companyName'],
                                                    item['companyAddress'],
                                                    item['companyPhone']))
-
                 try:
                     yield item
 
@@ -2125,20 +2124,5 @@ class YellowPagesSpider(scrapy.Spider):
 
             else:
                 return
-
-            with open('result.txt', 'a') as f:
-                f.write('{0},{1},{2}\n'.format(item['companyName'],
-                                               item['companyAddress'],
-                                               item['companyPhone']))
-            try:
-                yield item
-
-            except Exception as e:
-                print "*** ITEM DROPPED %s" % (str(e))
-                with open('dropped.txt', 'a+') as d:
-                    d.write(url + '\t-\t' + str(e) + '\n')
-
-        else:
-            return
 
 
