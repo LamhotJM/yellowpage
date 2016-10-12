@@ -1,8 +1,10 @@
-import scrapy
+from scrapy.xlib.pydispatch import dispatcher
 from scrapy.selector import Selector
 from scrapy.item import Field, Item
 from scrapy.http import Request
-import logging
+from scrapy import signals
+import scrapy
+import re
 
 
 class YellowpagesItem(Item):
@@ -10,10 +12,11 @@ class YellowpagesItem(Item):
     companyAddress = Field()
     companyPhone = Field()
     totalResult = Field()
+    Category = Field()
 
 
 class YellowPagesSpider(scrapy.Spider):
-    handle_httpstatus_list = [404,302,403]
+    handle_httpstatus_list = [404, 302, 403]
     name = "yellowpages"
     allowed_domains = ["yellowpages.sg"]
     start_urls = [
@@ -2056,7 +2059,11 @@ class YellowPagesSpider(scrapy.Spider):
             yield Request(url=url, callback=self.parse, dont_filter=True)
 
     def parse(self, response):
-        if response.status == 403 or response.status == 404 or response.status == 302:
+        if response.status == 200:
+            with open('success_url_crawl.txt', 'a') as f:
+                f.write('{0}\n'.format(response.url))
+
+        if response.status == 403 or response.status == 404 or response.status == 302 or response.status == 503:
             self.crawler.stats.inc_value('failed_url_count')
             self.failed_urls.append(response.url)
             with open('failed_url_crawl.txt', 'a') as f:
@@ -2066,24 +2073,20 @@ class YellowPagesSpider(scrapy.Spider):
         strTemp = url.css('.breadcrumb>li::text').extract_first()
 
         if strTemp == None:
-            crawlUrl = response.url + "?per=20&page=1&ajax=1&sort=all"
+            crawlUrl = response.url + "?per=60&page=1&ajax=1&sort=all"
             yield Request(url=crawlUrl, callback=self.parse_pagination, dont_filter=True)
         else:
             totals = [int(s) for s in strTemp.split() if s.isdigit()]
             totalResult = str(totals).strip('[]')
             import math
-            totalPage = int(math.ceil(float(totalResult) / 20))
+            totalPage = int(math.ceil(float(totalResult) / 60))
             for i in range(1, totalPage):
-                crawlUrl = response.url + "?per=20&page=" + str(
+                crawlUrl = response.url + "?per=60&page=" + str(
                     i) + "&ajax=1&sort=all"
                 yield Request(url=crawlUrl, callback=self.parse_pagination, dont_filter=True)
 
     def handle_spider_closed(spider, reason):
         spider.crawler.stats.set_value('failed_urls', ','.join(spider.failed_urls))
-
-    from scrapy.spider import BaseSpider
-    from scrapy.xlib.pydispatch import dispatcher
-    from scrapy import signals
 
     def process_exception(self, response, exception, spider):
         ex_class = "%s.%s" % (exception.__class__.__module__, exception.__class__.__name__)
@@ -2093,6 +2096,14 @@ class YellowPagesSpider(scrapy.Spider):
     dispatcher.connect(handle_spider_closed, signals.spider_closed)
 
     def parse_pagination(self, response):
+        splitCategory = response.url
+        splitQuestionMark = splitCategory.split("?")
+        rep = {"http://www.yellowpages.sg/category/": "", "-": " "}
+        rep = dict((re.escape(k), v) for k, v in rep.iteritems())
+        pattern = re.compile("|".join(rep.keys()))
+        cleanCategory = pattern.sub(lambda m: rep[re.escape(m.group(0))], splitQuestionMark[0])
+        Category = cleanCategory.title()
+
         url = Selector(response)
         EVENT_LINK_XPATH = '//div[@class="company_items"]'
         events = url.xpath(EVENT_LINK_XPATH)
@@ -2100,29 +2111,32 @@ class YellowPagesSpider(scrapy.Spider):
         for event_link in events:
             if events:
                 count += 1
-                companyName = event_link.xpath('//*[@class="mapItem"]/@data-comp-name').extract()
-                companyName = companyName[count].strip() if companyName else ''
-                companyAddress = event_link.xpath('//*[@class="mapItem"]/@data-comp-addr').extract()
-                companyAddress = companyAddress[count].strip() if companyAddress else ''
-                companyPhone = url.xpath('.//*[@id]/div[2]/div[3]/div[1]//a//@href').extract()
-                companyPhone = companyPhone[count].strip() if companyPhone else ''
-                item = YellowpagesItem(companyName=companyName,
-                                       companyAddress=companyAddress,
-                                       companyPhone=companyPhone)
-
-                with open('result.txt', 'a') as f:
-                    f.write('{0},{1},{2}\n'.format(item['companyName'],
-                                                   item['companyAddress'],
-                                                   item['companyPhone']))
                 try:
+                    companyName = event_link.xpath('//*[@class="mapItem"]/@data-comp-name').extract()
+                    companyName = companyName[count].strip() if companyName else ''
+                    companyAddress = event_link.xpath('//*[@class="mapItem"]/@data-comp-addr').extract()
+                    companyAddress = companyAddress[count].strip() if companyAddress else ''
+                    companyPhone = url.xpath('.//*[@id]/div[2]/div[3]/div[1]//a//@href').extract()
+                    companyPhone = companyPhone[count].strip() if companyPhone else ''
+                    item = YellowpagesItem(Category=Category,
+                                           companyName=companyName,
+                                           companyAddress=companyAddress,
+                                           companyPhone=companyPhone)
+
+                    with open('result.txt', 'a') as f:
+                        f.write('{0},{1},{2},{3}\n'.format(item['Category'],
+                                                           item['companyName'],
+                                                           item['companyAddress'],
+                                                           item['companyPhone']))
+
                     yield item
 
                 except Exception as e:
-                    print "*** ITEM DROPPED %s" % (str(e))
-                    with open('dropped.txt', 'a+') as d:
-                        d.write(url + '\t-\t' + str(e) + '\n')
+                    with open('error_result.txt', 'a') as f:
+                        f.write('{0},{1},{2},{3}\n'.format(response.url,
+                                                           item['companyName'],
+                                                           item['companyAddress'],
+                                                           item['companyPhone']))
 
             else:
                 return
-
-

@@ -1,8 +1,8 @@
-import scrapy
 from scrapy.selector import Selector
-from scrapy.item import Field, Item
 from scrapy.http import Request
+import scrapy
 import json
+
 
 class YellowPagesSpider(scrapy.Spider):
     name = "category"
@@ -27,7 +27,6 @@ class YellowPagesSpider(scrapy.Spider):
 
             with open('category.txt', 'a') as f:
                 f.write('{0}\n'.format(crawlUrl))
-
 
     def parse_sub_categories(self, response):
         responds = json.loads(response.body_as_unicode())
